@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helper primitives ---
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isEmailVerified() { return request.auth.token.email_verified == true; }
+
+    // --- User Validation ---
+    function isValidUser(data) {
+      return data.keys().hasAll(['highScores', 'streak', 'updatedAt']) &&
+             data.keys().size() == 3 &&
+             data.highScores is map &&
+             data.streak is map &&
+             data.streak.count is int &&
+             data.streak.count >= 0 &&
+             data.streak.lastDate is string &&
+             data.streak.lastDate.size() <= 64 &&
+             data.updatedAt == request.time;
+    }
+
+    // --- Match blocks ---
+    match /stats/community {
+      allow get: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'totalSpeedPoints', 
+          'totalStroopPoints', 
+          'totalMemoryLevels', 
+          'totalSearchPoints', 
+          'totalRhythmSyncs',
+          'totalTurboTaps',
+          'totalHoldScore',
+          'totalMathPoints'
+        ])
+      ) && (
+        // Ensure only increments of positive numbers are allowed to prevent cheating/decrementing
+        (incoming().get('totalSpeedPoints', 0) >= existing().get('totalSpeedPoints', 0)) &&
+        (incoming().get('totalStroopPoints', 0) >= existing().get('totalStroopPoints', 0)) &&
+        (incoming().get('totalMemoryLevels', 0) >= existing().get('totalMemoryLevels', 0)) &&
+        (incoming().get('totalSearchPoints', 0) >= existing().get('totalSearchPoints', 0)) &&
+        (incoming().get('totalRhythmSyncs', 0) >= existing().get('totalRhythmSyncs', 0)) &&
+        (incoming().get('totalTurboTaps', 0) >= existing().get('totalTurboTaps', 0)) &&
+        (incoming().get('totalHoldScore', 0) >= existing().get('totalHoldScore', 0)) &&
+        (incoming().get('totalMathPoints', 0) >= existing().get('totalMathPoints', 0))
+      );
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      // List is denied by default via safety net, but if I were to allow it, I'd need to restrict it.
+      
+      allow create: if isOwner(userId) && isEmailVerified() && isValidUser(incoming()) && isValidId(userId);
+      allow update: if isOwner(userId) && isEmailVerified() && isValidUser(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['highScores', 'streak', 'updatedAt'])
+      );
+    }
+
+    match /messages/{msgId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isEmailVerified() &&
+                    incoming().userId == request.auth.uid &&
+                    incoming().text is string &&
+                    incoming().text.size() <= 500 &&
+                    incoming().createdAt == request.time;
+    }
+  }
+}

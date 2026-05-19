@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Stores user high scores and streak information.",
+      "type": "object",
+      "properties": {
+        "highScores": {
+          "type": "object",
+          "description": "Map of game types to high scores."
+        },
+        "streak": {
+          "type": "object",
+          "description": "Current daily streak info {count: number, lastDate: string}."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp."
+        }
+      },
+      "required": ["highScores", "streak", "updatedAt"]
+    },
+    "CommunityStats": {
+      "title": "Community Totals",
+      "description": "Aggregated stats for the entire community.",
+      "type": "object",
+      "properties": {
+        "totalSpeedPoints": { "type": "integer" },
+        "totalStroopPoints": { "type": "integer" },
+        "totalMemoryLevels": { "type": "integer" },
+        "totalSearchPoints": { "type": "integer" },
+        "totalRhythmSyncs": { "type": "integer" }
+      }
+    },
+    "Message": {
+      "title": "Chat Message",
+      "description": "Real-time chat message.",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userPhoto": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["text", "userId", "userName", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User specific data."
+    },
+    "/stats/community": {
+      "schema": "CommunityStats",
+      "description": "Global community aggregates."
+    },
+    "/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Public chat messages."
+    }
+  }
+}

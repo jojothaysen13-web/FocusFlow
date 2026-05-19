@@ -1,0 +1,6 @@
+{
+  "name": "FocusFlow",
+  "description": "Ein Set von Mini-Spielen für ADHS-Betroffene, um die Konzentration spielerisch zurückzuholen.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
