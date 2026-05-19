@@ -18,8 +18,10 @@ service cloud.firestore {
 
     // --- User Validation ---
     function isValidUser(data) {
-      return data.keys().hasAll(['highScores', 'streak', 'updatedAt']) &&
-             data.keys().size() == 3 &&
+      return data.keys().hasAll(['userName', 'userPhoto', 'highScores', 'streak', 'updatedAt']) &&
+             data.keys().size() == 5 &&
+             data.userName is string &&
+             data.userPhoto is string &&
              data.highScores is map &&
              data.streak is map &&
              data.streak.count is int &&
@@ -42,7 +44,9 @@ service cloud.firestore {
           'totalRhythmSyncs',
           'totalTurboTaps',
           'totalHoldScore',
-          'totalMathPoints'
+          'totalMathPoints',
+          'totalNBackPoints',
+          'totalSchultePoints'
         ])
       ) && (
         // Ensure only increments of positive numbers are allowed to prevent cheating/decrementing
@@ -53,17 +57,17 @@ service cloud.firestore {
         (incoming().get('totalRhythmSyncs', 0) >= existing().get('totalRhythmSyncs', 0)) &&
         (incoming().get('totalTurboTaps', 0) >= existing().get('totalTurboTaps', 0)) &&
         (incoming().get('totalHoldScore', 0) >= existing().get('totalHoldScore', 0)) &&
-        (incoming().get('totalMathPoints', 0) >= existing().get('totalMathPoints', 0))
+        (incoming().get('totalMathPoints', 0) >= existing().get('totalMathPoints', 0)) &&
+        (incoming().get('totalNBackPoints', 0) >= existing().get('totalNBackPoints', 0)) &&
+        (incoming().get('totalSchultePoints', 0) >= existing().get('totalSchultePoints', 0))
       );
     }
 
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      // List is denied by default via safety net, but if I were to allow it, I'd need to restrict it.
-      
+      allow read: if isSignedIn();
       allow create: if isOwner(userId) && isEmailVerified() && isValidUser(incoming()) && isValidId(userId);
       allow update: if isOwner(userId) && isEmailVerified() && isValidUser(incoming()) && (
-        incoming().diff(existing()).affectedKeys().hasOnly(['highScores', 'streak', 'updatedAt'])
+        incoming().diff(existing()).affectedKeys().hasOnly(['userName', 'userPhoto', 'highScores', 'streak', 'updatedAt'])
       );
     }
 

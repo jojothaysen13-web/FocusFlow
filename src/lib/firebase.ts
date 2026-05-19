@@ -1,12 +1,12 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, getDocFromServer, serverTimestamp, Timestamp, increment, onSnapshot, updateDoc, collection, addDoc, query, orderBy, limit } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { getFirestore, doc, setDoc, getDoc, getDocFromServer, serverTimestamp, Timestamp, increment, onSnapshot, updateDoc, collection, addDoc, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
-export { increment, onSnapshot, updateDoc, collection, addDoc, query, orderBy, limit };
+export { increment, onSnapshot, updateDoc, collection, addDoc, query, orderBy, limit, getDocs, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider };
 export const googleProvider = new GoogleAuthProvider();
 
 // Standard login helper
@@ -17,6 +17,34 @@ export const loginWithGoogle = async () => {
   } catch (error) {
     console.error('Login error:', error);
     throw error;
+  }
+};
+
+export const updateUserProfile = async (displayName: string, photoURL?: string) => {
+  if (!auth.currentUser) throw new Error("No user logged in");
+  
+  // Update Auth Profile
+  await updateProfile(auth.currentUser, {
+    displayName,
+    photoURL
+  });
+
+  // Update Firestore Document
+  const userDoc = doc(db, 'users', auth.currentUser.uid);
+  const snap = await getDoc(userDoc);
+  if (snap.exists()) {
+    await updateDoc(userDoc, {
+      displayName: displayName,
+      photoURL: photoURL || null,
+      updatedAt: serverTimestamp()
+    });
+  } else {
+    await setDoc(userDoc, {
+      displayName: displayName,
+      photoURL: photoURL || null,
+      updatedAt: serverTimestamp(),
+      createdAt: serverTimestamp()
+    });
   }
 };
 
