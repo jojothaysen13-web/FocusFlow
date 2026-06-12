@@ -336,7 +336,7 @@ const StroopTest: React.FC<GameProps> = ({ onBack, updateHighScore, highScore })
 
   const handleStart = () => {
     setScore(0);
-    setTimeLeft(32);
+    setTimeLeft(30);
     setGameOver(false);
     setIsPlaying(true);
     nextChallenge();
@@ -437,7 +437,7 @@ const StroopTest: React.FC<GameProps> = ({ onBack, updateHighScore, highScore })
              </div>
              <div className="p-6 bg-stone-50 border border-stone-200 rounded-3xl text-left">
                <p className="text-[9px] text-stone-400 uppercase tracking-widest mb-1">Accuracy</p>
-               <p className="text-2xl font-display font-black text-stone-900">{((score / (score + (isRefreshing ? 1 : 0))) * 100 || 0).toFixed(0)}%</p>
+               <p className="text-2xl font-display font-black text-stone-900">{((score / 30) * 100 || 0).toFixed(0)}%</p>
              </div>
           </div>
           
@@ -1038,7 +1038,7 @@ const ProfileEditor = ({ user, onClose }: { user: User, onClose: () => void }) =
       </button>
       
       <div className="space-y-2 text-center">
-        <h2 className="text-3xl font-display font-black italic uppercase italic tracking-tighter">Edit Identity</h2>
+        <h2 className="text-3xl font-display font-black italic uppercase tracking-tighter">Edit Identity</h2>
         <p className="text-stone-500 font-mono text-xs uppercase tracking-widest">Personal Protocol Configuration</p>
       </div>
 
@@ -2099,7 +2099,7 @@ const SchulteTable: React.FC<GameProps> = ({ onBack, updateHighScore, highScore 
               </div>
               <div className="p-6 bg-stone-50 border border-stone-200 rounded-3xl text-left">
                 <p className="text-[9px] text-stone-400 uppercase tracking-widest mb-1">Efficiency</p>
-                <p className="text-2xl font-display font-black text-stone-900">{(1000 / timeResult).toFixed(1)}%</p>
+                <p className="text-2xl font-display font-black text-stone-900">{timeResult > 0 ? (1000 / timeResult).toFixed(1) : '--'}%</p>
               </div>
           </div>
           <div className="flex gap-4 justify-center max-w-sm mx-auto">
